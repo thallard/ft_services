@@ -1,22 +1,17 @@
 FROM alpine:3.12
 
-RUN  apk update && apk add mysql \
-	 wget \
-	 php \
-	 php-cli \
-	 php-cgi \
-	 php-mbstring \
-	 php-fpm \
-	 php-json \
-	 sudo \
-	 nginx
+RUN apk update && apk add --no-cache \
+	wget sudo nginx openssl openssh \
+	&& adduser -D -g 'www' www \
+	&& mkdir /www \
+	&& chown -R www:www /var/lib/nginx \
+	&& chown -R www:www /www \
+	&& ssh-keygen -A \
+	&& openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/nginx-selfsigned.key -out /etc/ssl/certs/nginx-selfsigned.crt -subj "/C=FR/ST=Lyon/L=Lyon/O=thallard/OU=42/CN=42.fr"
 
+RUN rm /etc/nginx/nginx.conf
+COPY nginx.conf /etc/nginx/nginx.conf
 
-COPY . .
+EXPOSE 80 443
 
-RUN chmod 777 setup.sh
-
-EXPOSE 80
-EXPOSE 443
-
-CMD ["sh", "setup.sh"]
+CMD nginx -g 'pid /tmp/nginx.pid; daemon off;'
