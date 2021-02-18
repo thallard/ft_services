@@ -4,28 +4,71 @@ RUN mkdir -p /usr/share/webapps
 COPY phpmyadmin.tar.gz /usr/share/webapps
 
 RUN  apk -U upgrade && \
-	apk add --no-cache wget php7-fpm php7-mysqli php7-mbstring php7-json php7-session php-phar curl nginx openssl openssh openrc sudo \
-	&& adduser -D -g 'www' www \
-	&& mkdir /www \ 
-	&& chown -R www:www /var/lib/nginx \
-	&& chown -R www:www /www \
-	&& ssh-keygen -A \
-	&& openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/nginx-selfsigned.key -out /etc/ssl/certs/nginx-selfsigned.crt -subj "/C=FR/ST=Lyon/L=Lyon/O=thallard/OU=42/CN=42.fr" \
-	&& mkdir -p /usr/share/webapps/ \
-	&& cd /usr/share/webapps/ \
-	&& tar -xzvf phpmyadmin.tar.gz && rm phpmyadmin.tar.gz \
-	&& mv phpMyAdmin-4.9.7-all-languages phpmyadmin 
+	apk add  --no-cache \
+	fcgi \
+	openrc openssl \
+	php7 php7-fpm php7-common php7-iconv php7-json php7-opcache php7-gd php7-curl php7-xml php7-mysqli php7-imap php7-cgi \
+	php7-pdo php7-pdo_mysql php7-soap php7-xmlrpc php7-posix php7-mcrypt php7-zlib php7-gettext php7-ldap php7-ctype php7-dom php7-mbstring php7-json php7-session \
+	 curl sudo openssh 
+	# && adduser -D -g 'www' www \
+	# && mkdir /www \ 
+	# && chown -R www:www /var/lib/nginx \
+	# && chown -R www:www /www \
+	# && ssh-keygen -A \
+	# && openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/nginx-selfsigned.key -out /etc/ssl/certs/nginx-selfsigned.crt -subj "/C=FR/ST=Lyon/L=Lyon/O=thallard/OU=42/CN=42.fr" \
+	# && mkdir -p /usr/share/webapps/ \
+	# && cd /usr/share/webapps/ \
+	# && tar -xzvf phpmyadmin.tar.gz && rm phpmyadmin.tar.gz \
+	# && mv phpMyAdmin-4.9.7-all-languages phpmyadmin  \
+	# && chmod -R 777 /usr/share/webapps/ \
+	# && ln -s /usr/share/webapps/phpmyadmin/ /var/www/localhost/htdocs/phpmyadmin \
+	# && rm -rf /usr/share/nginx/html
+
+	RUN apk add  --no-cache \
+nginx \
+&& adduser -D -g 'www' www \
+&& mkdir /www \
+&& chown -R www:www /var/lib/nginx \
+&& chown -R www:www /www ; \
+rm /etc/nginx/nginx.conf \
+&& openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/selfsigned.key -out /etc/ssl/certs/selfsigned.crt -subj "/C=FR/ST=Lyon/L=Lyon/O=thjacque/OU=42/CN=42.fr"
+ADD nginx.conf /etc/nginx/nginx.conf
+
+RUN apk add telegraf --repository http://dl-3.alpinelinux.org/alpine/edge/community/ --allow-untrusted --no-cache \
+; mkdir -p /usr/share/webapps/ ;  \
+cd /usr/share/webapps   ;\
+wget http://files.directadmin.com/services/all/phpMyAdmin/phpMyAdmin-5.0.4-all-languages.tar.gz ;\
+tar zxf phpMyAdmin-5.0.4-all-languages.tar.gz ; \
+rm phpMyAdmin-5.0.4-all-languages.tar.gz ; \
+mv phpMyAdmin-5.0.4-all-languages phpmyadmin ; \
+chmod -R 777 /usr/share/webapps/ ; \
+ln -s /usr/share/webapps/phpmyadmin/ /var/www/localhost/htdocs/phpmyadmin \
+;  rm -rf /usr/share/nginx/html
+
+COPY telegraf.conf /etc/telegraf/telegraf.conf
+
+ADD config.inc.php /usr/share/webapps/phpmyadmin/
+
+# RUN rm /etc/nginx/nginx.conf
+# COPY nginx.conf /etc/nginx/nginx.conf
+# COPY nginx.conf /etc/nginx/conf.d/default.conf
+# COPY config.inc.php /usr/share/webapps/phpmyadmin/
+# COPY loop.sh .
 
 
-
-RUN rm /etc/nginx/nginx.conf
-COPY nginx.conf /etc/nginx/nginx.conf
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# RUN tar xvfz phpmyadmin.tar.gz \
-# 	&& mv phpMyAdmin-4.9.7-all-languages phpmyadmin \
-# 	&& mv phpmyadmin /var/www/
+RUN apk add telegraf --repository http://dl-3.alpinelinux.org/alpine/edge/community/ --allow-untrusted --no-cache 
+COPY telegraf.conf /etc/telegraf/telegraf.conf
 
 EXPOSE 5000
 
-CMD nginx -g 'pid /tmp/nginx.pid; daemon off;'
+RUN mkdir -p /run/openrc/ \
+	&& touch /run/openrc/softlevel
+
+STOPSIGNAL SIGTERM
+
+CMD php-fpm7 && (sh /loop.sh &) && nginx -g 'pid /tmp/nginx.pid; daemon off;'
+
+
+
+
+

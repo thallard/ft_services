@@ -12,5 +12,4 @@ echo "FLUSH PRIVILEGES;" | mysql -u root
 
 rc-service mariadb restart
 pkill mysqld
-
 /usr/bin/mysqld --user=root --datadir=/var/lib/mysql

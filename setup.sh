@@ -5,43 +5,55 @@ export MINIKUBE_HOME=/Users/thallard/goinfre
 minikube delete
 minikube start --driver=virtualbox
 eval $(minikube docker-env)
+
+
 IP_MINIKUBE=$(minikube ip)
 
 
 # Sed original files for applying minikube IP
 sed -e "s/IP_S/$IP_MINIKUBE/g;s/IP_E/$IP_MINIKUBE/g" srcs/metallb/config.txt > srcs/metallb/metallb.yaml
 sed -e "s/IP/$IP_MINIKUBE/g" srcs/wordpress/original_create_wp > srcs/wordpress/create_wp.sh
-
-# MetalLB part
-kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.5/manifests/namespace.yaml >> last.log
-kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.5/manifests/metallb.yaml >> last.log
-kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)" >> last.log
-kubectl apply -f srcs/metallb/. >> last.log
+sed -e "s/CHANGEIP/$IP_MINIKUBE/g" srcs/ftps/original_Dockerfile > srcs/ftps/Dockerfile
+# MetalLB part + Volumes saves
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.5/manifests/namespace.yaml >> traces.log
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.5/manifests/metallb.yaml >> traces.log
+kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)" >> traces.log
+kubectl apply -f srcs/metallb/. >> traces.log
 
 # InfluxDB
+printf "${GREENB}Creating InfluxDB image and container.\n${BLANK}"
 docker build -t influxdb-image srcs/influxdb 1>/dev/null
 kubectl apply -f srcs/influxdb/influxdb.yaml 1>/dev/null
-printf "${GREENB}Creating InfluxDB image and container.\n${BLANK}"
 
 # MySQL container
+printf "${GREENB}Creating MySQL image and container.\n${BLANK}"
 docker build -t mysql-image srcs/mysql 1>/dev/null
 kubectl apply -f srcs/mysql/mysql.yaml 1>/dev/null
-printf "${GREENB}Creating MySQL image and container.\n${BLANK}"
 
 # Nginx main
+printf "${GREENB}Creating NGINX image and container.\n${BLANK}"
 docker build -t nginx-image srcs/nginx/ 1>/dev/null
 kubectl apply -f srcs/nginx/nginx.yaml 1>/dev/null
-printf "${GREENB}Creating NGINX image and container.\n${BLANK}"
 
 # Wordpress
+printf "${GREENB}Creating Wordpress image and container.\n${BLANK}"
 docker build -t wordpress-image srcs/wordpress 1>/dev/null
 kubectl apply -f srcs/wordpress/wordpress.yaml 1>/dev/null
-printf "${GREENB}Creating Wordpress image and container.\n${BLANK}"
 
 # PHPMyAdmin
+printf "${GREENB}Creating PHPMyAdmin image and container.\n${BLANK}"
 docker build -t phpmyadmin-image srcs/phpmyadmin 1>/dev/null
 kubectl apply -f srcs/phpmyadmin/phpmyadmin.yaml 1>/dev/null
-printf "${GREENB}Creating PHPMyAdmin image and container.\n${BLANK}"
+
+# Grafana
+printf "${GREENB}Creating Grafana image and container.\n${BLANK}"
+docker build -t grafana-image srcs/grafana 1>/dev/null
+kubectl apply -f srcs/grafana/grafana.yaml 1>/dev/null
+
+# FTPS
+# printf "${GREENB}Creating FTPS image and container.\n${BLANK}"
+# docker build -t ftps-image srcs/ftps
+# kubectl apply -f srcs/ftps/ftps.yaml
 
 # Launch dashboard
 minikube dashboard

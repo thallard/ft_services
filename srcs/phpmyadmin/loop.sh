@@ -1,10 +1,6 @@
 #!/bin/bash
-sleep 30
+sleep 15
 while [ $(ps aux | grep php-fpm | wc -l) -gt 1 ]; do
-	sleep 5
-done
-sleep 5
-while [ $(ps aux | grep php-fpm | wc -l) -gt 1 ]; do
-	sleep 5
+        sleep 5
 done
 pkill nginx

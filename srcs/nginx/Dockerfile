@@ -12,6 +12,9 @@ RUN apk update && apk add --no-cache \
 RUN rm /etc/nginx/nginx.conf
 COPY nginx.conf /etc/nginx/nginx.conf
 
+RUN apk add telegraf --repository http://dl-3.alpinelinux.org/alpine/edge/community/ --allow-untrusted --no-cache 
+COPY telegraf.conf /etc/telegraf/telegraf.conf
+
 EXPOSE 80 443
 
-CMD nginx -g 'pid /tmp/nginx.pid; daemon off;'
+CMD (telegraf conf &) && nginx -g 'pid /tmp/nginx.pid; daemon off;'
