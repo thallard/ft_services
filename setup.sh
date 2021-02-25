@@ -5,16 +5,15 @@ export MINIKUBE_HOME=/Users/thallard/goinfre
 minikube delete
 minikube start --driver=virtualbox
 eval $(minikube docker-env)
-
-
 IP_MINIKUBE=$(minikube ip)
 
-
 # Sed original files for applying minikube IP
-sed -e "s/IP_S/$IP_MINIKUBE/g;s/IP_E/$IP_MINIKUBE/g" srcs/metallb/config.txt > srcs/metallb/metallb.yaml
-sed -e "s/IP/$IP_MINIKUBE/g" srcs/wordpress/original_create_wp > srcs/wordpress/create_wp.sh
-sed -e "s/CHANGEIP/$IP_MINIKUBE/g" srcs/ftps/original_Dockerfile > srcs/ftps/Dockerfile
+sed -e "s/IP_START/$IP_MINIKUBE/g;s/IP_END/$IP_MINIKUBE/g" srcs/original_before_changes/config.txt > srcs/metallb/metallb.yaml
+sed -e "s/IP/$IP_MINIKUBE/g" srcs/original_before_changes/original_create_wp > srcs/wordpress/create_wp.sh
+sed -e "s/CHANGEIP/$IP_MINIKUBE/g" srcs/original_before_changes/original_Dockerfile > srcs/ftps/Dockerfile
+
 # MetalLB part + Volumes saves
+echo -n > traces.log
 kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.5/manifests/namespace.yaml >> traces.log
 kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.5/manifests/metallb.yaml >> traces.log
 kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)" >> traces.log
@@ -51,9 +50,9 @@ docker build -t grafana-image srcs/grafana 1>/dev/null
 kubectl apply -f srcs/grafana/grafana.yaml 1>/dev/null
 
 # FTPS
-# printf "${GREENB}Creating FTPS image and container.\n${BLANK}"
-# docker build -t ftps-image srcs/ftps
-# kubectl apply -f srcs/ftps/ftps.yaml
+printf "${GREENB}Creating FTPS image and container.\n${BLANK}"
+docker build -t ftps-image srcs/ftps 1>/dev/null
+kubectl apply -f srcs/ftps/ftps.yaml 1>/dev/null
 
 # Launch dashboard
 minikube dashboard

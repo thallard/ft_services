@@ -18,8 +18,6 @@ RUN apk -U upgrade && \
 	&& chmod +x wp-cli.phar \
 	&& mv wp-cli.phar /usr/local/bin/wp
 
-
-COPY latest.tar.gz .
 COPY wp-config.php .
 COPY create_wp.sh .
 COPY loop.sh .
@@ -28,16 +26,9 @@ RUN rm /etc/nginx/nginx.conf
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY wp-config.php /usr/share/webapps/wordpress/wp-config.php
+
 RUN chmod +x loop.sh
 RUN chmod +x create_wp.sh
-# RUN rm /etc/nginx/conf.d/default.conf
-# COPY default.conf /etc/nginx/conf.d/default.conf
-
-
-# RUN tar xvfz latest.tar.gz \
-# 	&& mv wordpress/* /var/www/ \
-# 	&& rm /var/www/html/wp-config-sample.php \
-# 	&&cp wp-config.php /var/www/
 
 EXPOSE 5050
 

@@ -36,3 +36,4 @@ spec:
       - name: grafana
         image: grafana-image
         imagePullPolicy: Never
+        
