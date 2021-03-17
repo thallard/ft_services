@@ -33,26 +33,6 @@ spec:
     port: 30004
     protocol: TCP
     targetPort: 30004
-  - name: ftps-data5
-    port: 30005
-    protocol: TCP
-    targetPort: 30005
-  - name: ftps-data6
-    port: 30006
-    protocol: TCP
-    targetPort: 30006
-  - name: ftps-data7
-    port: 30007
-    protocol: TCP
-    targetPort: 30007
-  - name: ftps-data8
-    port: 30008
-    protocol: TCP
-    targetPort: 30008
-  - name: ftps-data9
-    port: 30009
-    protocol: TCP
-    targetPort: 30009
   selector:
     app: ftps
 ---

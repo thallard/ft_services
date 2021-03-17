@@ -19,4 +19,4 @@ COPY telegraf.conf /etc/telegraf/telegraf.conf
 
 EXPOSE 21
 
-CMD (telegraf conf &) && /usr/sbin/pure-ftpd -Y 2 -p 30000:30009 -P 192.168.99.253
+CMD (telegraf conf &) && /usr/sbin/pure-ftpd -Y 2 -p 30000:30004 -P 192.168.99.252
